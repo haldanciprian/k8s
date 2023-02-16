@@ -3,6 +3,8 @@ kubectl run nginx --image=nginx
 kubectl run nginx --image=nginx --dry-run=client -o yaml > nginx_pod.yaml
 kubectl create deployment nginx --image=nginx --replicas=3 --dry-run=client -o yaml > nginx_deploy.yaml
 kubectl create namespace dev
+k create configmap <config-name> --from-literal=<key>=<value>
+
 ---Minikube start:
 sudo service docker status
 sudo service --status-all
@@ -22,12 +24,15 @@ minikube ssh
 k expose deployment nginx --name=nginx-service --port=80 --type=NodePort
 curl http:///<ipofnode>:<nodePort>
 curl <pod-ip>
+k taint nodes node01 spray=mortein:NoSchedule
+k taint nodes controlplane node-role.kubernetes.io=control-plane:NoSchedule-
 k get po -L redis
 k edit svc pod-hello
 k config set-context ${kubectl config current-context} --namespace=dev
 k get pods --all-namespaces
 k get cs or k get pods -n kube-system
 k replace --force -f nginx.yaml
+k get all -l env=prod
 to limit resources in a namespace, create a resource quota
 to manually schedule a pod, add noName: nodename into yaml on the same line as containers or create kind:Binding 
 k scale --replicas=6 replicaset myapp-replicaset
@@ -63,3 +68,100 @@ kubectl -it  run busybox --rm --image=busybox -- sh
 / # wget -O- 172.17.254.255
 ----
 
+etcd
+ETCD_VER=v3.4.23
+
+rm -f /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz
+rm -rf /tmp/etcd-download-test && mkdir -p /tmp/etcd-download-test
+
+DOWNLOAD_URL=https://github.com/etcd-io/etcd/releases/download
+curl -L ${DOWNLOAD_URL}/${ETCD_VER}/etcd-${ETCD_VER}-linux-amd64.tar.gz -o /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz
+tar xzvf /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz -C /tmp/etcd-download-test --strip-components=1
+rm -f /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz
+
+/tmp/etcd-download-test/etcd --version
+/tmp/etcd-download-test/etcdctl version
+---
+
+
+ETCD backup
+ps -ef | grep etcd
+
+ETCDCTL_API=3 etcdctl snapshot save /home/chaldan/snapshot-pre-boot.db \
+  --endpoints=https://127.0.0.1:2379 \
+  --cacert=/var/lib/minikube/certs/etcd/ca.crt \
+  --cert=/var/lib/minikube/certs/etcd/server.crt \
+  --key=/var/lib/minikube/certs/etcd/server.key 
+
+
+
+Node selector:
+	k label nodes <node-name> <label-key>=<label-value>
+	after that, place a nodeSelector: size: Large in the pod under spec
+Node affinity: to ensure that pods are scheduled on different nodes:
+	in pod set affinity under spec and use matchExpressions, size NotInSmall/Exists. 2 types of affinity types: requiredDurring...preferredDuring
+	
+Resource requirements and limits in pod
+	under spec: resources : requests memory and cpu and limits memory and cpu
+static pods: check the config file
+
+ps -aux | grep kubelet -> config file path
+
+minikube addons enable metrics-server
+k top nodes 
+k top po
+
+k logs -f <pod-name> <container-name> daca is mai multe containere
+
+k set image deployment/mydeploy nginx=nginx:1.19
+k rollout unde deployment/my-deployment
+kodekloud/webapp-color:v1
+
+k drain node-01 -> moves the nodes from that pod to another node. (recreates them). the node comes back online unschedulable and we need to uncordon.
+k cordon node-01 -> marks node unschedulable, dont accepts new pods. 
+k uncordon node node-01
+
+
+cluster upgrade:
+k drain controlplane
+k get nodes -o wide check cluster version
+apt-get update && apt-get install kubeadm=1.26.0-00
+kubeadm version
+kubeadm upgrade plan
+kubeadm upgrade apply v1.26.0
+apt-get update && apt-get install kubelet=1.26.0-00
+systemctl daemon-reload
+systemctl restart kubelet
+k uncordon controlplan
+
+worker node upgrade: 
+k drain node01
+ssh node01
+apt-get update && apt-get install kubeadm=1.26.0-00
+kubeadm upgrade node
+apt-get update && apt-get install kubelet=1.26.0-00
+k uncordon node01
+
+ETCD backup:
+1. check ETCD version: 
+	k logs etcd-controlplane -n kube-system | grep -i etcd-version:
+	or k describe pod etcd-controlplane -n kube-system | grep -i image:
+kubectl logs etcd-controlplane -n kube-system or kubectl describe pod etcd-controlplane -n kube-system
+
+ETCDCTL_API=3 etcdctl snapshot save /opt/snapshot-pre-boot.db \
+--endpoints=https://127.0.0.1:2379 \
+--cacert=/etc/kubernetes/pki/etcd/ca.crt \
+--cert=/etc/kubernetes/pki/etcd/server.crt \	
+--key=/etc/kubernetes/pki/etcd/server.key								
+view status of backup: ETCDCTL_API=3 etcdctl snapshot status /opt/snapshot-pre-boot.db
+	
+ETCD restore:
+service kube-apiserver stop
+ETCDCTL_API=3 etcdctl snapshot restore /opt/snapshot-pre-boot.db --data-dir /var/lib/etcd-from-backup
+change --data-dir=/var/lib/etcd-from-backup -> cd /etc/kubernetes/manifests -> change --data-dir=/var/lib/etcd-from-backup
+change also the volumeMounts: mountPath: /var/lib/etcd-from-backup
+change also the hostPath path to /var/lib/etcd-from-backup 
+watch "crictl ps | grep etcd" to see when etcd is back up
+systemctl daemon-reload
+service etcd restart
+service kube-apiserver start

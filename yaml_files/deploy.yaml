@@ -13,9 +13,35 @@ spec:
     metadata:
       labels:
         app: nginx
+      name: nginx
     spec:
       containers:
-      - name: nginx
-        image: nginx:alpine
-        ports:
-        - containerPort: 80
+        - image: nginx
+          name: nginx
+          envFrom:
+            - configMapRef:
+                name: app-config
+            - secretRef:
+                name: mysecret
+#      volumes:
+#        - name: vol
+#          emptyDir: {}
+#          env:
+#            - name: APP_COLOR
+#              value: PINK
+#          ports:
+#            - containerPort: 80
+#    volumeMounts:
+#      - mountPath: "/data"
+#        name: volume-name
+#          command:
+#            - "sleep"
+#            - "1000"
+#          resources:
+#            requests:
+#              memory: 10Mi
+#              cpu: 100m
+#            limits:
+#              memory: 15Mi
+#              cpu: 200m
+    

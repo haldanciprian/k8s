@@ -6,9 +6,31 @@ metadata:
   name: nginx
 spec:
   containers:
-  - image: nginx
+  - image: kodekloud/webapp-color
     name: nginx
-    resources: {}
-  dnsPolicy: ClusterFirst
-  restartPolicy: Always
-status: {}
+    ports:
+      - containerPort: 80
+#    volumeMounts:
+#      - mountPath: "/data"
+#        name: volume-name
+    command:
+      - "sleep"
+      - "1000"
+    resources:
+      requests:
+        memory: 10Mi
+        cpu: 100m
+      limits:
+        memory: 15Mi
+        cpu: 200m
+    env:
+      - name: APP_COLOR
+        value: PINK
+#    envFrom:
+#     - configMapRef:
+#          name: app-config
+  volumes:
+    - name: vol
+      emptyDir: {}
+  
+  
