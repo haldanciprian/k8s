@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: myapp-replicaset
+  labels:
+    app: frontend
+spec:
+  template:
+    metadata:
+      name: redis
+      labels:
+        app: redis
+    spec:
+      containers:
+        - name: redis
+          image: redis
+          resources: {}
+          ports:
+          - containerPort: 80
+  replicas: 3
+  selector:
+    matchLabels:
+      app: redis

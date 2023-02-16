@@ -1,0 +1,65 @@
+---Create commands :
+kubectl run nginx --image=nginx
+kubectl run nginx --image=nginx --dry-run=client -o yaml > nginx_pod.yaml
+kubectl create deployment nginx --image=nginx --replicas=3 --dry-run=client -o yaml > nginx_deploy.yaml
+kubectl create namespace dev
+---Minikube start:
+sudo service docker status
+sudo service --status-all
+sudo usermod -aG docker chaldan && newgrp docker
+minikube start --driver=docker
+sudo usermod -a -G docker chaldan
+docker:x:998:chaldan
+newgrp docker
+minikube dashboard --url
+minikube service nginx-service --url
+
+---Commands:
+kubectl set image deployment/my-deployment mycontainer=myimage
+k describe svc pod-hello | grep -i selector
+k describe pod pod-hello | grep -i ip:
+minikube ssh
+k expose deployment nginx --name=nginx-service --port=80 --type=NodePort
+curl http:///<ipofnode>:<nodePort>
+curl <pod-ip>
+k get po -L redis
+k edit svc pod-hello
+k config set-context ${kubectl config current-context} --namespace=dev
+k get pods --all-namespaces
+k get cs or k get pods -n kube-system
+k replace --force -f nginx.yaml
+to limit resources in a namespace, create a resource quota
+to manually schedule a pod, add noName: nodename into yaml on the same line as containers or create kind:Binding 
+k scale --replicas=6 replicaset myapp-replicaset
+k get pod busybox -ojson|jq '.spec.containers[0].image' "busybox"
+kubectl api-resources         # List resource types
+kubectl explain <resource>    # Show information about a resource
+kubectl explain deployment
+# List resources in cluster
+kubectl get <resource>                    # In current namespace
+kubectl get <resource> -n <namespace>     # In specific namespace
+kubectl get <resource> --all-namespaces   # In all namespaces
+kubectl get <resource> -o wide            # Add extended information
+kubectl get <resource> -o yaml            # output in YAML format
+kubectl get <resource> -o json            # output in JSON format
+# Example
+kubectl get pods [-n abc|--all-namespaces] [-o wide|yaml|json]
+
+---Aliases:
+alias e='./etcdctl'
+alias k=kubectl
+alias kgp="k get pod"
+alias kgd="k get deploy"
+alias kgs="k get svc"
+alias kgn="k get nodes"
+alias kgrs="k get rs"
+alias kd="k describe"
+alias kge="k get events --sort-by='.metadata.creationTimestamp' |tail -8"
+export do="--dry-run=client -o yaml"
+export now="--force --grace-period 0"
+k delete pod test $now
+kubectl help run
+kubectl -it  run busybox --rm --image=busybox -- sh 
+/ # wget -O- 172.17.254.255
+----
+
