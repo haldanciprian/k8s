@@ -165,3 +165,4 @@ watch "crictl ps | grep etcd" to see when etcd is back up
 systemctl daemon-reload
 service etcd restart
 service kube-apiserver start
+-----
