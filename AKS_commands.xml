@@ -33,6 +33,8 @@ k get pods --all-namespaces
 k get cs or k get pods -n kube-system
 k replace --force -f nginx.yaml
 k get all -l env=prod
+k config get-clusters -> get cluster names 
+k config view -> view complet clusters info 
 to limit resources in a namespace, create a resource quota
 to manually schedule a pod, add noName: nodename into yaml on the same line as containers or create kind:Binding 
 k scale --replicas=6 replicaset myapp-replicaset
