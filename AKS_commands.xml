@@ -148,12 +148,12 @@ ETCD backup:
 	or k describe pod etcd-controlplane -n kube-system | grep -i image:
 kubectl logs etcd-controlplane -n kube-system or kubectl describe pod etcd-controlplane -n kube-system
 
-ETCDCTL_API=3 etcdctl snapshot save /opt/snapshot-pre-boot.db \
---endpoints=https://127.0.0.1:2379 \
+ETCDCTL_API=3 etcdctl snapshot save /opt/etcd-backup.db \
+--endpoints=https://192.22.58.3:2379 \
 --cacert=/etc/kubernetes/pki/etcd/ca.crt \
 --cert=/etc/kubernetes/pki/etcd/server.crt \	
 --key=/etc/kubernetes/pki/etcd/server.key								
-view status of backup: ETCDCTL_API=3 etcdctl snapshot status /opt/snapshot-pre-boot.db
+view status of backup: ETCDCTL_API=3 etcdctl snapshot status /opt/etcd-backup.db
 	
 ETCD restore:
 service kube-apiserver stop
@@ -166,3 +166,29 @@ systemctl daemon-reload
 service etcd restart
 service kube-apiserver start
 -----
+
+
+ETCDCTL_API=3 etcdctl snapshot save /opt/etcd-backup.db --endpoints=https://192.22.58.3:2379 --cacert=/etc/kubernetes/pki/etcd/ca.crt --cert=/etc/kubernetes/pki/etcd/server.crt --key=/etc/kubernetes/pki/etcd/server.key	
+ETCDCTL_API=3 etcdctl --endpoints $ENDPOINT snapshot save snapshotdb
+
+cat /etc/kubernetes/manifests/etcd.yaml | grep file
+
+---
+Roles and access
+1. create csr and get approved
+2. create role with priviledges
+3. create rolebinding to bind role to user john
+create a CSR kind yaml
+cat john.csr | base64 | tr -d "\n" -> copy to yaml
+csr in pending
+k certificate approve john-developer
+k create role --help
+k auth --help
+k auth can-i get pods --namespace=development --as john
+k create rolebinding --help
+k create rolebinding john-developer --role=developer --user=john --namespace=development
+k auth can-i get pods --namespace=development --as john
+
+
+---
+verify user and group ID kubectl exec -it non-root-pod -- id
