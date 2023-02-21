@@ -49,6 +49,8 @@ kubectl get <resource> -o yaml            # output in YAML format
 kubectl get <resource> -o json            # output in JSON format
 # Example
 kubectl get pods [-n abc|--all-namespaces] [-o wide|yaml|json]
+kubectl config --kubeconfig=/root/my-kube-config use-context research
+kubectl config --kubeconfig=/root/my-kube-config current-context
 
 ---Aliases:
 alias e='./etcdctl'
@@ -66,6 +68,8 @@ k delete pod test $now
 kubectl help run
 kubectl -it  run busybox --rm --image=busybox -- sh 
 / # wget -O- 172.17.254.255
+crictl ps -a
+crictl logs container-id
 ----
 
 etcd
@@ -180,6 +184,7 @@ Roles and access
 3. create rolebinding to bind role to user john
 create a CSR kind yaml
 cat john.csr | base64 | tr -d "\n" -> copy to yaml
+k create -f yaml
 csr in pending
 k certificate approve john-developer
 k create role --help
