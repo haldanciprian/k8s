@@ -194,3 +194,13 @@ k auth can-i get pods --namespace=development --as john
 
 ---
 verify user and group ID kubectl exec -it non-root-pod -- id
+
+---
+RBAC
+check authorization of apiserver -> k describe pod kube-apiserver-controlplane -n kube-system
+check roles -> k get roles -A
+check the role -> k describe role kube-proxy -n kube-system
+check to which account is the role assigned -> k get rolebindings -n kube-system -> k describe rolebinding kube-proxy -n kube-system
+k auth can-i get pods --as dev-user = k get pods --as dev-user
+create role -> kubectl create role developer --verb=create,list,delete --resource=pods -o yaml > developer.yaml
+create rolebinding -> kubectl create rolebinding dev-user-binding --user=dev-user --role=developer
