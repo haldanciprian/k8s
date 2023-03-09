@@ -4,6 +4,8 @@ kubectl run nginx --image=nginx --dry-run=client -o yaml > nginx_pod.yaml
 kubectl create deployment nginx --image=nginx --replicas=3 --dry-run=client -o yaml > nginx_deploy.yaml
 kubectl create namespace dev
 k create configmap <config-name> --from-literal=<key>=<value>
+kubectl create configmap ingress-nginx-controller --namespace ingress-nginx
+create service account: k create serviceaccount ingress-nginx -n ingress-nginx
 
 ---Minikube start:
 sudo service docker status
@@ -243,3 +245,11 @@ check to which account is the role assigned -> k get rolebindings -n kube-system
 k auth can-i get pods --as dev-user = k get pods --as dev-user
 create role -> kubectl create role developer --verb=create,list,delete --resource=pods -o yaml > developer.yaml
 create rolebinding -> kubectl create rolebinding dev-user-binding --user=dev-user --role=developer
+
+---
+Ingress
+k get ingress -A
+deploy ingress controller:
+1. create ns -> k create ns ingress-nginx
+2. create configmap: kubectl create configmap ingress-nginx-controller --namespace ingress-nginx
+3. create service account: k create serviceaccount ingress-nginx -n ingress-nginx
