@@ -202,7 +202,6 @@ k auth can-i get pods --namespace=development --as john
 ---
 verify user and group ID kubectl exec -it non-root-pod -- id
 
-<<<<<<< HEAD
 Access to context kubeconfig
 k config view
 kubectl config set-credentials martin --client-certificate=/root/martin.crt --client-key=/root/martin.key --namespace=development
@@ -229,12 +228,12 @@ What is the range of IP addresses configured for PODs on this cluster? -> k logs
 What is the IP Range configured for the services within the cluster? cat /etc/kubernetes/manifests/kube-apiserver.yaml | grep cluster-ip-range
 What type of proxy is the kube-proxy configured to use? k logs kube-proxy-ckcl6 -n kube-system
 How does this Kubernetes cluster ensure that a kube-proxy pod runs on all nodes in the cluster?
-coreDns -< cat /etc/coredns/Corefile
+coreDns -> </weave-pod-ip> cat /etc/coredns/Corefile
 k get configmap -n kube-system
 k get service -n kube0system -> check kube-dns ip
 service ip of the coredns -> cat /etc/resolv/conf
 host web-service to identify ip address of svc
-=======
+
 ---
 RBAC
 check authorization of apiserver -> k describe pod kube-apiserver-controlplane -n kube-system
@@ -244,4 +243,3 @@ check to which account is the role assigned -> k get rolebindings -n kube-system
 k auth can-i get pods --as dev-user = k get pods --as dev-user
 create role -> kubectl create role developer --verb=create,list,delete --resource=pods -o yaml > developer.yaml
 create rolebinding -> kubectl create rolebinding dev-user-binding --user=dev-user --role=developer
->>>>>>> e753100adf4cc16b4b5f23c86659913f07ab60cd
