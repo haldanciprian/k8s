@@ -32,5 +32,8 @@ spec:
   volumes:
     - name: vol
       emptyDir: {}
+    - name: mypd
+      persistentVolumeClaim:
+        claimName: myclaim
   
   

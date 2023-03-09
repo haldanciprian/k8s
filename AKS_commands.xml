@@ -17,6 +17,8 @@ minikube dashboard --url
 minikube service nginx-service --url
 
 ---Commands:
+k get pod pvc-user -o yaml | kubectl replace -f - --force
+k exec pvc-user -- touch /mnt/share/my-pvc/coolfile
 kubectl set image deployment/my-deployment mycontainer=myimage
 k describe svc pod-hello | grep -i selector
 k describe pod pod-hello | grep -i ip:
@@ -197,3 +199,35 @@ k auth can-i get pods --namespace=development --as john
 
 ---
 verify user and group ID kubectl exec -it non-root-pod -- id
+
+Access to context kubeconfig
+k config view
+kubectl config set-credentials martin --client-certificate=/root/martin.crt --client-key=/root/martin.key --namespace=development
+kubectl config set-context developer --cluster=kubernetes --namespace=development --user=martin
+kubectl create role developer-role --verb=get,list,watch --resource=pods -n development
+k create rolebinding developer-rolebinding --role=developer-role --user=martin --namespace=development
+kubectl config use-context kubernetes-admin@kubernetes
+---
+Networking
+find the ip address of controlplane -> k get po -n kube-system -o wide
+network interface configured for cluster connectivity on the controlplane node -> ip a | grep -B2 <ip> which results to eth0
+What is the MAC address of the interface on the controlplane node -> ip link show eth0 sau ifconfig eth0
+ip address of node01 -> k get no  -o wide 
+MAC address of node01-> ssh node01 -> ip a | grep -B2 <ip> sau ssh node01 ifconfig eth0
+show all network interfaces -> ifconfig -a
+We use Containerd as our container runtime. What is the interface/bridge created by Containerd on the controlplane node? ifconfig -a 
+If you were to ping google from the controlplane node, which route does it take? ip r sau ip route si vezi default route
+what is the port of kube-scheduler -> k describe po kube-scheduler -n kube-system sau netstat -natulp | grep kube-scheduler
+what is the port of ETCD -> netstat -natulp | grep etcd | grep LISTEN
+CNi e configurat in kubelet -> ps aux | grep kubelet -> check folders bin and conf-> ipam subnet arata ip urilela poduri
+what is the path configured with all binaries of CNI supported plugins? /opt/cni/bin
+What network range are the nodes in the cluster part of? -> ip addr
+What is the range of IP addresses configured for PODs on this cluster? -> k logs <weave-pod-ip> -n kube-system | grep -i ipalloc-range
+What is the IP Range configured for the services within the cluster? cat /etc/kubernetes/manifests/kube-apiserver.yaml | grep cluster-ip-range
+What type of proxy is the kube-proxy configured to use? k logs kube-proxy-ckcl6 -n kube-system
+How does this Kubernetes cluster ensure that a kube-proxy pod runs on all nodes in the cluster?
+coreDns -< cat /etc/coredns/Corefile
+k get configmap -n kube-system
+k get service -n kube0system -> check kube-dns ip
+service ip of the coredns -> cat /etc/resolv/conf
+host web-service to identify ip address of svc
