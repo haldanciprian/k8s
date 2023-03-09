@@ -35,6 +35,8 @@ k get pods --all-namespaces
 k get cs or k get pods -n kube-system
 k replace --force -f nginx.yaml
 k get all -l env=prod
+k config get-clusters -> get cluster names 
+k config view -> view complet clusters info 
 to limit resources in a namespace, create a resource quota
 to manually schedule a pod, add noName: nodename into yaml on the same line as containers or create kind:Binding 
 k scale --replicas=6 replicaset myapp-replicaset
@@ -200,6 +202,7 @@ k auth can-i get pods --namespace=development --as john
 ---
 verify user and group ID kubectl exec -it non-root-pod -- id
 
+<<<<<<< HEAD
 Access to context kubeconfig
 k config view
 kubectl config set-credentials martin --client-certificate=/root/martin.crt --client-key=/root/martin.key --namespace=development
@@ -231,3 +234,14 @@ k get configmap -n kube-system
 k get service -n kube0system -> check kube-dns ip
 service ip of the coredns -> cat /etc/resolv/conf
 host web-service to identify ip address of svc
+=======
+---
+RBAC
+check authorization of apiserver -> k describe pod kube-apiserver-controlplane -n kube-system
+check roles -> k get roles -A
+check the role -> k describe role kube-proxy -n kube-system
+check to which account is the role assigned -> k get rolebindings -n kube-system -> k describe rolebinding kube-proxy -n kube-system
+k auth can-i get pods --as dev-user = k get pods --as dev-user
+create role -> kubectl create role developer --verb=create,list,delete --resource=pods -o yaml > developer.yaml
+create rolebinding -> kubectl create rolebinding dev-user-binding --user=dev-user --role=developer
+>>>>>>> e753100adf4cc16b4b5f23c86659913f07ab60cd
