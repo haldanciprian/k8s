@@ -1,7 +1,7 @@
 ---Create commands :
 kubectl run nginx --image=nginx
 kubectl run nginx --image=nginx --dry-run=client -o yaml > nginx_pod.yaml
-kubectl create deployment nginx --image=nginx --replicas=3 --dry-run=client -o yaml > nginx_deploy.yaml
+kubectl create deployment nginx --image=nginx -l=name=nginx --replicas=1
 kubectl create namespace dev
 k create configmap <config-name> --from-literal=<key>=<value>
 kubectl create configmap ingress-nginx-controller --namespace ingress-nginx
@@ -19,6 +19,7 @@ minikube dashboard --url
 minikube service nginx-service --url
 
 ---Commands:
+k get po mysql -n epsilon -o yaml > mysql.yaml
 k logs podname -f --revious
 k get pod pvc-user -o yaml | kubectl replace -f - --force
 k exec pvc-user -- touch /mnt/share/my-pvc/coolfile
