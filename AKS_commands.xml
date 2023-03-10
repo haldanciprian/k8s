@@ -19,6 +19,7 @@ minikube dashboard --url
 minikube service nginx-service --url
 
 ---Commands:
+k logs podname -f --revious
 k get pod pvc-user -o yaml | kubectl replace -f - --force
 k exec pvc-user -- touch /mnt/share/my-pvc/coolfile
 kubectl set image deployment/my-deployment mycontainer=myimage
