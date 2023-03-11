@@ -20,7 +20,7 @@ minikube service nginx-service --url
 
 ---Commands:
 k get po mysql -n epsilon -o yaml > mysql.yaml
-k logs podname -f --revious
+k logs podname -f --previous
 k get pod pvc-user -o yaml | kubectl replace -f - --force
 k exec pvc-user -- touch /mnt/share/my-pvc/coolfile
 kubectl set image deployment/my-deployment mycontainer=myimage
@@ -78,6 +78,12 @@ kubectl -it  run busybox --rm --image=busybox -- sh
 / # wget -O- 172.17.254.255
 crictl ps -a
 crictl logs container-id
+top
+df -h
+service kubelet status
+sudo journalctl -u kubelet
+ssh node01 "service kubelet start" sau systemctl restart kubelet
+
 ----
 
 etcd
@@ -126,7 +132,7 @@ k top po
 k logs -f <pod-name> <container-name> daca is mai multe containere
 
 k set image deployment/mydeploy nginx=nginx:1.19
-k rollout unde deployment/my-deployment
+k rollout status deployment/my-deployment
 kodekloud/webapp-color:v1
 
 k drain node-01 -> moves the nodes from that pod to another node. (recreates them). the node comes back online unschedulable and we need to uncordon.
@@ -255,3 +261,15 @@ deploy ingress controller:
 1. create ns -> k create ns ingress-nginx
 2. create configmap: kubectl create configmap ingress-nginx-controller --namespace ingress-nginx
 3. create service account: k create serviceaccount ingress-nginx -n ingress-nginx
+
+---
+Json
+k get pods -o=jsonpath='{.items[0].spec.containers[0].image}'
+k get nodes -o=jsonpath='{.items[*].metadata.name} {"\n"} {.items[*].status.capacity.cpu}'
+Use JSON PATH query to fetch node names and store them in /opt/outputs/node_names.txt   k get no -o=jsonpath='{.items[*].metadata.name}' > /opt/outputs/node_names.txt
+Use JSON PATH query to retrieve the osImages of all the nodes and store it in a file /opt/outputs/nodes_os.txt. k get no -o=jsonpath='{.items[*].status.nodeInfo.osImage}' > /opt/outputs/node_os.txt
+A set of Persistent Volumes are available. Sort them based on their capacity and store the result in the file /opt/outputs/storage-capacity-sorted.txt.
+k get pv --sort-by=.spec.capacity.storage
+kubectl get pv --sort-by=.spec.capacity.storage -o=custom-columns=NAME:.metadata.name,CAPACITY:.spec.capacity.storage > /opt/outputs/pv-and-capacity-sorted.txt
+kubectl config view --kubeconfig=/root/CKA/admin.kubeconfig
+k get deploy -n admin2406 -o=custom-columns=DEPLOYMENT:.metadata.name,CONTAINER_IMAGE:.spec.template.spec.containers[0].image,READY_REPLICAS:.status.readyReplicas,NAMESPACE:.metadata.namespace --sort-by=.metadata.name > /opt/admin2406_data
