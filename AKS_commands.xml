@@ -19,6 +19,8 @@ minikube dashboard --url
 minikube service nginx-service --url
 
 ---Commands:
+k rollout history deploy nginx-deploy
+k exec -it secret-1401 -n admin1401 -- sh
 k get po mysql -n epsilon -o yaml > mysql.yaml
 k logs podname -f --previous
 k get pod pvc-user -o yaml | kubectl replace -f - --force
@@ -74,7 +76,7 @@ export do="--dry-run=client -o yaml"
 export now="--force --grace-period 0"
 k delete pod test $now
 kubectl help run
-kubectl -it  run busybox --rm --image=busybox -- sh 
+kubectl -it  run busybox --rm --image=busybox -- sh sau -- /bin/bash
 / # wget -O- 172.17.254.255
 crictl ps -a
 crictl logs container-id
@@ -186,7 +188,7 @@ service kube-apiserver start
 -----
 
 
-ETCDCTL_API=3 etcdctl snapshot save /opt/etcd-backup.db --endpoints=https://192.22.58.3:2379 --cacert=/etc/kubernetes/pki/etcd/ca.crt --cert=/etc/kubernetes/pki/etcd/server.crt --key=/etc/kubernetes/pki/etcd/server.key	
+ETCDCTL_API=3 etcdctl snapshot save /opt/etcd-backup.db --endpoints=https://192.14.236.12:2379 --cacert=/etc/kubernetes/pki/etcd/ca.crt --cert=/etc/kubernetes/pki/etcd/server.crt --key=/etc/kubernetes/pki/etcd/server.key
 ETCDCTL_API=3 etcdctl --endpoints $ENDPOINT snapshot save snapshotdb
 
 cat /etc/kubernetes/manifests/etcd.yaml | grep file
@@ -214,7 +216,7 @@ verify user and group ID kubectl exec -it non-root-pod -- id
 
 Access to context kubeconfig
 k config view
-kubectl config set-credentials martin --client-certificate=/root/martin.crt --client-key=/root/martin.key --namespace=development
+kubectl config set-credentials john --client-certificate=/root/CKA/john.crt --client-key=/root/CKA/john.key --namespace=development
 kubectl config set-context developer --cluster=kubernetes --namespace=development --user=martin
 kubectl create role developer-role --verb=get,list,watch --resource=pods -n development
 k create rolebinding developer-rolebinding --role=developer-role --user=martin --namespace=development
@@ -243,6 +245,9 @@ k get configmap -n kube-system
 k get service -n kube0system -> check kube-dns ip
 service ip of the coredns -> cat /etc/resolv/conf
 host web-service to identify ip address of svc
+test lookup the service and pod: 
+	k exec busybox -- nslookup nginx-resolver-service
+	k exec busybox -- nslookup 10-244-192-6.default.pod.cluster.local > /root/CKA/nginx.pod
 
 ---
 RBAC
