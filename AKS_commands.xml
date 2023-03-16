@@ -19,6 +19,11 @@ minikube dashboard --url
 minikube service nginx-service --url
 
 ---Commands:
+kubectl create secret generic db-secret-xxdf --from-literal=DB_Host=sql01 --from-literal=DB_User=root --from-literal=DB_Password=password123
+kubectl create configmap cm-3392845 --from-literal=DB_NAME=SQL3322 --from-literal=DB_HOST=sql322.mycompany.com --from-literal=DB_PORT=3306
+encode secret echo -n 'admin' | base64
+k logs pod name -> to see echo message set in container
+k api-resources | grep stateful
 k rollout history deploy nginx-deploy
 k exec -it secret-1401 -n admin1401 -- sh
 k get po mysql -n epsilon -o yaml > mysql.yaml
@@ -36,6 +41,7 @@ k taint nodes node01 spray=mortein:NoSchedule
 k taint nodes controlplane node-role.kubernetes.io=control-plane:NoSchedule-
 k get po -L redis
 k edit svc pod-hello
+k top pod -n backend --sort-by cpu --selector app=auth
 k config set-context ${kubectl config current-context} --namespace=dev
 k get pods --all-namespaces
 k get cs or k get pods -n kube-system
@@ -126,6 +132,7 @@ Resource requirements and limits in pod
 static pods: check the config file
 
 ps -aux | grep kubelet -> config file path
+cat /var/lib/kubelet/config.yaml | grep -i static
 
 minikube addons enable metrics-server
 k top nodes 
@@ -143,23 +150,27 @@ k uncordon node node-01
 
 
 cluster upgrade:
-k drain controlplane
+k drain controlplane --ignore-daemonsets
 k get nodes -o wide check cluster version
-apt-get update && apt-get install kubeadm=1.26.0-00
-kubeadm version
-kubeadm upgrade plan
-kubeadm upgrade apply v1.26.0
-apt-get update && apt-get install kubelet=1.26.0-00
-systemctl daemon-reload
-systemctl restart kubelet
+sudo -i
+sudo apt-get update && sudo apt-get install --allow-change-held-packages kubeadm=1.22.2-00
+sudo kubeadm version
+sudo kubeadm upgrade plan v1.22.2
+sudo kubeadm upgrade apply v1.22.2
+sudo apt-get update
+sudo apt-get install kubelet=1.22.2-00 kubectl=1.22.2-00
+sudo systemctl daemon-reload
+sudo systemctl restart kubelet
 k uncordon controlplan
 
 worker node upgrade: 
-k drain node01
+k drain node01 --ignore-daemonsets
 ssh node01
-apt-get update && apt-get install kubeadm=1.26.0-00
-kubeadm upgrade node
-apt-get update && apt-get install kubelet=1.26.0-00
+sudo apt-get update && sudo apt-get install kubeadm=1.22.2-00
+#kubeadm upgrade node
+sudo apt-get update && sudo apt-get install kubelet=1.22.2-00 kubectl=1.22.2-00
+sudo systemctl daemon-reload
+sudo systemctl restart kubelet
 k uncordon node01
 
 ETCD backup:
@@ -176,7 +187,12 @@ ETCDCTL_API=3 etcdctl snapshot save /opt/etcd-backup.db \
 view status of backup: ETCDCTL_API=3 etcdctl snapshot status /opt/etcd-backup.db
 	
 ETCD restore:
-service kube-apiserver stop
+sudo systemctl stop etcd
+sudo rm -rf /var/lib/etcd
+sudo ETCDCTL_API=3 etcdctl --endpoints etcd1:2379 snapshot restore /home/cloud_user/etcd_backup.db
+sudo chown -R etcd:etcd /var/lib/etcd
+sudo systemctl start etcd
+
 ETCDCTL_API=3 etcdctl snapshot restore /opt/snapshot-pre-boot.db --data-dir /var/lib/etcd-from-backup
 change --data-dir=/var/lib/etcd-from-backup -> cd /etc/kubernetes/manifests -> change --data-dir=/var/lib/etcd-from-backup
 change also the volumeMounts: mountPath: /var/lib/etcd-from-backup

@@ -26,9 +26,9 @@ spec:
     env:
       - name: APP_COLOR
         value: PINK
-#    envFrom:
-#     - configMapRef:
-#          name: app-config
+    envFrom:
+     - configMapRef:
+          name: app-config
   volumes:
     - name: vol
       emptyDir: {}
