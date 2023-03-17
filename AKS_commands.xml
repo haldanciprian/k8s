@@ -43,6 +43,8 @@ k get po -L redis
 k edit svc pod-hello
 k top pod -n backend --sort-by cpu --selector app=auth
 k config set-context ${kubectl config current-context} --namespace=dev
+k config get-contexts 
+kubectl config current-context
 k get pods --all-namespaces
 k get cs or k get pods -n kube-system
 k replace --force -f nginx.yaml
@@ -225,7 +227,7 @@ k auth can-i get pods --namespace=development --as john
 k create rolebinding --help
 k create rolebinding john-developer --role=developer --user=john --namespace=development
 k auth can-i get pods --namespace=development --as john
-
+kubectl auth can-i list pods --as system:serviceaccount:default:thor-cka24-trb
 
 ---
 verify user and group ID kubectl exec -it non-root-pod -- id
