@@ -19,6 +19,7 @@ minikube dashboard --url
 minikube service nginx-service --url
 
 ---Commands:
+curl http://cluster3-controlplane:NODE-PORT
 kubectl create secret generic db-secret-xxdf --from-literal=DB_Host=sql01 --from-literal=DB_User=root --from-literal=DB_Password=password123
 kubectl create configmap cm-3392845 --from-literal=DB_NAME=SQL3322 --from-literal=DB_HOST=sql322.mycompany.com --from-literal=DB_PORT=3306
 encode secret echo -n 'admin' | base64
@@ -69,6 +70,7 @@ kubectl get <resource> -o json            # output in JSON format
 kubectl get pods [-n abc|--all-namespaces] [-o wide|yaml|json]
 kubectl config --kubeconfig=/root/my-kube-config use-context research
 kubectl config --kubeconfig=/root/my-kube-config current-context
+scp rolling-back-record.txt cluster1-controlplane:/root
 
 ---Aliases:
 alias e='./etcdctl'
@@ -223,6 +225,8 @@ csr in pending
 k certificate approve john-developer
 k create role --help
 k auth --help
+kubectl get event --field-selector involvedObject.name=check-time-cka03-trb
+
 k auth can-i get pods --namespace=development --as john
 k create rolebinding --help
 k create rolebinding john-developer --role=developer --user=john --namespace=development
@@ -296,3 +300,8 @@ k get pv --sort-by=.spec.capacity.storage
 kubectl get pv --sort-by=.spec.capacity.storage -o=custom-columns=NAME:.metadata.name,CAPACITY:.spec.capacity.storage > /opt/outputs/pv-and-capacity-sorted.txt
 kubectl config view --kubeconfig=/root/CKA/admin.kubeconfig
 k get deploy -n admin2406 -o=custom-columns=DEPLOYMENT:.metadata.name,CONTAINER_IMAGE:.spec.template.spec.containers[0].image,READY_REPLICAS:.status.readyReplicas,NAMESPACE:.metadata.namespace --sort-by=.metadata.name > /opt/admin2406_data
+
+---
+others
+kubectl config get-contexts --no-headers --output=name
+kubectl config get-contexts | grep '*' |  awk {'print $2'}
