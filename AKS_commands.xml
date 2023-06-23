@@ -19,6 +19,8 @@ minikube dashboard --url
 minikube service nginx-service --url
 
 ---Commands:
+k run busybox --image=busybox --command -- /bin/sh -c "while true;do echo hello;sleep 10;done"
+k run busybox --image=busybox:1.28 --rm -it --restart=Never -- nslookup nginx-resolver-service-cka06-svcn
 curl http://cluster3-controlplane:NODE-PORT
 kubectl create secret generic db-secret-xxdf --from-literal=DB_Host=sql01 --from-literal=DB_User=root --from-literal=DB_Password=password123
 kubectl create configmap cm-3392845 --from-literal=DB_NAME=SQL3322 --from-literal=DB_HOST=sql322.mycompany.com --from-literal=DB_PORT=3306
@@ -71,6 +73,8 @@ kubectl get pods [-n abc|--all-namespaces] [-o wide|yaml|json]
 kubectl config --kubeconfig=/root/my-kube-config use-context research
 kubectl config --kubeconfig=/root/my-kube-config current-context
 scp rolling-back-record.txt cluster1-controlplane:/root
+k exec -it multi-container-playground -c c1 -- printenv
+find CIDR - ssh controlplane node, check the api-server manifest and find cluster-ip-range 
 
 ---Aliases:
 alias e='./etcdctl'
@@ -89,13 +93,20 @@ kubectl help run
 kubectl -it  run busybox --rm --image=busybox -- sh sau -- /bin/bash
 / # wget -O- 172.17.254.255
 crictl ps -a
+crictl stop container-id
+crictl rm container-id 
 crictl logs container-id
 top
 df -h
+kubectl get event --field-selector involvedObject.name=kube-apiserver-cluster4-controlplane -n kube-system
 service kubelet status
-sudo journalctl -u kubelet
+sudo journalctl -u kubelet -f 
 ssh node01 "service kubelet start" sau systemctl restart kubelet
-
+journalctl -u kubelet --since "30 min ago" | grep 'Error:'
+systemctl start kubelet
+k config get-contexts -o name
+cat ~/.kube/config | grep current-context | sed 's/current-context: //'
+cat /etc/passwd |  awk 'BEGIN {FS=":"} {print $1}'
 ----
 
 etcd
@@ -215,8 +226,11 @@ cat /etc/kubernetes/manifests/etcd.yaml | grep file
 
 ---
 Roles and access
-1. create csr and get approved
-2. create role with priviledges
+1. create csr and get approved ->
+	 cat john.csr | base64 | tr -d "\n"
+	 Create a CertificateSigningRequest -> replace with ^
+	 kubectl certificate approve john
+2. create role with priviledges -> kubectl create role developer --verb=create,list,get,update,delete --resource=pods -n development
 3. create rolebinding to bind role to user john
 create a CSR kind yaml
 cat john.csr | base64 | tr -d "\n" -> copy to yaml
@@ -255,11 +269,11 @@ We use Containerd as our container runtime. What is the interface/bridge created
 If you were to ping google from the controlplane node, which route does it take? ip r sau ip route si vezi default route
 what is the port of kube-scheduler -> k describe po kube-scheduler -n kube-system sau netstat -natulp | grep kube-scheduler
 what is the port of ETCD -> netstat -natulp | grep etcd | grep LISTEN
-CNi e configurat in kubelet -> ps aux | grep kubelet -> check folders bin and conf-> ipam subnet arata ip urilela poduri
+CNI e configurat in kubelet -> ps aux | grep kubelet -> check folders bin and conf-> ipam subnet arata ip urilela poduri
 what is the path configured with all binaries of CNI supported plugins? /opt/cni/bin
 What network range are the nodes in the cluster part of? -> ip addr
 What is the range of IP addresses configured for PODs on this cluster? -> k logs <weave-pod-ip> -n kube-system | grep -i ipalloc-range
-What is the IP Range configured for the services within the cluster? cat /etc/kubernetes/manifests/kube-apiserver.yaml | grep cluster-ip-range
+What is the CNI/IP Range configured for the services within the cluster? cat /etc/kubernetes/manifests/kube-apiserver.yaml | grep cluster-ip-range
 What type of proxy is the kube-proxy configured to use? k logs kube-proxy-ckcl6 -n kube-system
 How does this Kubernetes cluster ensure that a kube-proxy pod runs on all nodes in the cluster?
 coreDns -> </weave-pod-ip> cat /etc/coredns/Corefile
@@ -270,7 +284,9 @@ host web-service to identify ip address of svc
 test lookup the service and pod: 
 	k exec busybox -- nslookup nginx-resolver-service
 	k exec busybox -- nslookup 10-244-192-6.default.pod.cluster.local > /root/CKA/nginx.pod
-
+    kubectl run busybox --image=busybox:1.28 --rm -it --restart=Never -- nslookup nginx-resolver-service-cka06-svcn
+	kubectl run busybox --image=busybox:1.28 --rm -it --restart=Never -- nslookup 10-50-192-8.default.pod.cluster.local
+	kubectl --context cluster3 run --rm  -i test-curl-pod --image=curlimages/curl --restart=Never -- curl -m 2 external-webserver-cka03-svcn
 ---
 RBAC
 check authorization of apiserver -> k describe pod kube-apiserver-controlplane -n kube-system
@@ -293,8 +309,10 @@ deploy ingress controller:
 Json
 k get pods -o=jsonpath='{.items[0].spec.containers[0].image}'
 k get nodes -o=jsonpath='{.items[*].metadata.name} {"\n"} {.items[*].status.capacity.cpu}'
-Use JSON PATH query to fetch node names and store them in /opt/outputs/node_names.txt   k get no -o=jsonpath='{.items[*].metadata.name}' > /opt/outputs/node_names.txt
-Use JSON PATH query to retrieve the osImages of all the nodes and store it in a file /opt/outputs/nodes_os.txt. k get no -o=jsonpath='{.items[*].status.nodeInfo.osImage}' > /opt/outputs/node_os.txt
+Use JSON PATH query to fetch node names and store them in /opt/outputs/node_names.txt   
+k get no -o=jsonpath='{.items[*].metadata.name}' > /opt/outputs/node_names.txt
+Use JSON PATH query to retrieve the osImages of all the nodes and store it in a file /opt/outputs/nodes_os.txt. 
+k get no -o=jsonpath='{.items[*].status.nodeInfo.osImage}' > /opt/outputs/node_os.txt
 A set of Persistent Volumes are available. Sort them based on their capacity and store the result in the file /opt/outputs/storage-capacity-sorted.txt.
 k get pv --sort-by=.spec.capacity.storage
 kubectl get pv --sort-by=.spec.capacity.storage -o=custom-columns=NAME:.metadata.name,CAPACITY:.spec.capacity.storage > /opt/outputs/pv-and-capacity-sorted.txt
@@ -305,3 +323,26 @@ k get deploy -n admin2406 -o=custom-columns=DEPLOYMENT:.metadata.name,CONTAINER_
 others
 kubectl config get-contexts --no-headers --output=name
 kubectl config get-contexts | grep '*' |  awk {'print $2'}
+
+
+
+ETCD:
+ETCDCTL_API=3 etcdctl --endpoints=https://127.0.0.1:2379 --cacert=/etc/kubernetes/pki/etcd/ca.crt --cert=/etc/kubernetes/pki/etcd/server.crt --key=/etc/kubernetes/pki/etcd/server.key snapshot save /tmp/etcd-backup.db
+
+ETCDCTL_API=3 etcdctl --endpoints=https://127.0.0.1:2379 --cacert=/etc/kubernetes/pki/etcd/ca.crt --cert=/etc/kubernetes/pki/etcd/server.crt --key=/etc/kubernetes/pki/etcd/server.key snapshot restore /tmp/etcd-backup.db --data-dir /var/lib/etcd-from-backup 
+
+change the manifest yaml for etcd -> change the hostPath from /var/lib/etcd to /var/lib/etcd-backup-1
+
+
+After net pol
+# these should work
+k -n space1 exec app1-0 -- curl -m 1 microservice1.space2.svc.cluster.local
+k -n space1 exec app1-0 -- curl -m 1 microservice2.space2.svc.cluster.local
+k -n space1 exec app1-0 -- nslookup tester.default.svc.cluster.local
+k -n kube-system exec -it validate-checker-pod -- curl -m 1 app1.space1.svc.cluster.local
+
+# these should not work
+k -n space1 exec app1-0 -- curl -m 1 tester.default.svc.cluster.local
+k -n kube-system exec -it validate-checker-pod -- curl -m 1 microservice1.space2.svc.cluster.local
+k -n kube-system exec -it validate-checker-pod -- curl -m 1 microservice2.space2.svc.cluster.local
+k -n default run nginx --image=nginx:1.21.5-alpine --restart=Never -i --rm  -- curl -m 1 microservice1.space2.svc.cluster.local
