@@ -1,11 +1,12 @@
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: pv-analytics
+  name: task-pv-volume
 spec:
+  storageClassName: manual
   capacity:
     storage: 100Mi
   accessModes:
     - ReadWriteMany
   hostPath:
-    path: /pv/data-analytics
+    path: "/mnt/data"
